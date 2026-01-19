@@ -1,0 +1,1042 @@
+﻿
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REWORK SCAN</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #007acc;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .mode-btn {
+      padding: 10px 20px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .mode-btn.rework {
+      background-color: #007acc;
+      color: white;
+    }
+
+    .mode-btn.scan {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .mode-btn.active.rework {
+      background-color: #005b99;
+    }
+
+    .mode-btn.active.scan {
+      background-color: #218838;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 15px auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .input-row input {
+      flex: 1;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    .required-field {
+      border: 2px solid #dc3545 !important;
+    }
+
+    .disabled-input {
+      background-color: #f8f9fa !important;
+      cursor: not-allowed !important;
+    }
+
+    #buttons {
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      margin: 10px 0;
+    }
+
+    .btn-small {
+      width: 90px;
+      margin: 4px 0;
+      padding: 10px;
+      font-size: 15px;
+      border-radius: 5px;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-ok {
+      background-color: #28a745;
+    }
+
+    .btn-ng {
+      background-color: #dc3545;
+    }
+
+    .btn-ok:hover {
+      background-color: #218838;
+    }
+
+    .btn-ng:hover {
+      background-color: #c82333;
+    }
+
+    .message {
+      color: white;
+      min-height: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .message.error {
+      background-color: #dc3545;
+      display: block;
+    }
+
+    .message.warning {
+      background-color: #ffc107;
+      color: #212529;
+      display: block;
+    }
+
+    .message.success {
+      background-color: #28a745;
+      display: block;
+    }
+
+    .message.info {
+      background-color: #17a2b8;
+      display: block;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background-color: #007acc;
+      color: white;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .scan-mode th {
+      background-color: #28a745;
+    }
+
+    .sort-icon {
+      margin-left: 5px;
+      font-size: 12px;
+    }
+
+    #stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin: 10px 0;
+      font-size: 14px;
+      background: #eef3f8;
+      padding: 8px;
+      border-radius: 8px;
+    }
+
+    .scan-mode #stats {
+      justify-content: center;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .scan-mode .action-btn {
+      background-color: #28a745;
+    }
+
+    .file-input-container {
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .file-input-label {
+      display: block;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border: 1px dashed #ccc;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .file-input-label:hover {
+      background-color: #e0e0e0;
+    }
+
+    #file-name {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    #codes-table {
+      margin-top: 20px;
+    }
+
+    .status-ok {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .status-ng {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    .confirmation-dialog {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .confirmation-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .confirmation-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .confirmation-btn {
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .confirm-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+    }
+
+    .cancel-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+    }
+
+    @keyframes highlight {
+      0% { background-color: rgba(255, 255, 0, 0.3); }
+      100% { background-color: transparent; }
+    }
+    .new-entry {
+      animation: highlight 3s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation-dialog" id="confirmationDialog">
+    <div class="confirmation-content">
+      <h3 id="confirmationTitle">Czy na pewno chcesz usunąć ten kod?</h3>
+      <p id="confirmationMessage">Kod zostanie trwale usunięty z listy.</p>
+      <div class="confirmation-buttons">
+        <button class="confirmation-btn cancel-btn" onclick="cancelRemoval()">Anuluj</button>
+        <button class="confirmation-btn confirm-btn" onclick="confirmRemoval()">Potwierdź</button>
+      </div>
+    </div>
+  </div>
+
+  <header>REWORK SCAN</header>
+  
+  <div class="mode-selector">
+    <button id="reworkModeBtn" class="mode-btn rework active" onclick="switchMode('rework')">Rework</button>
+    <button id="scanModeBtn" class="mode-btn scan" onclick="switchMode('scan')">Scan</button>
+  </div>
+
+  <main id="mainContent">
+    <div class="input-row">
+      <input id="rework-name" placeholder="Nazwa reworku*" onkeydown="handleReworkNameKeyDown(event)" oninput="validateForm()" />
+      <input id="inspector" placeholder="Inspektor* (min. 3 znaki)" onkeydown="handleInspectorKeyDown(event)" oninput="validateForm()" />
+    </div>
+
+    <div id="fileInputContainer" class="file-input-container">
+      <label for="code-list" class="file-input-label">Zaimportuj listę kodów (XLSX/CSV)</label>
+      <input type="file" id="code-list" accept=".xlsx,.csv" style="display: none;" onchange="handleFileImport(event)" />
+      <div id="file-name">Nie wybrano pliku</div>
+    </div>
+
+    <input id="barcode" placeholder="Wpisz kod kreskowy" disabled class="disabled-input" />
+    <div id="buttons">
+      <button class="btn-small btn-ok" onclick="selectStatus('OK')">OK</button>
+      <button class="btn-small btn-ng" onclick="selectStatus('NG')">NG</button>
+    </div>
+
+    <input id="note" placeholder="Adnotacja (NG)" disabled style="display: none;" />
+    <div class="message" id="message"></div>
+
+    <div id="stats">
+      <div><strong>✅ Zeskanowano:</strong> <span id="scannedCount">0</span></div>
+      <div id="toScanContainer"><strong>📝 Do zeskanowania:</strong> <span id="toScanCount">0</span></div>
+      <div id="okContainer"><strong>✅ OK:</strong> <span id="okCount">0</span></div>
+      <div id="ngContainer"><strong>❌ NG:</strong> <span id="ngCount">0</span></div>
+      <div id="ngPercentContainer"><strong>📊 % NG:</strong> <span id="ngPercent">0%</span></div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn" onclick="exportToExcel()">Eksportuj</button>
+      <button class="action-btn" onclick="resetAll()">Resetuj</button>
+    </div>
+
+    <div id="codes-table">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('code')">Kod <span id="sort-code-icon" class="sort-icon">↓</span></th>
+            <th id="statusHeader" onclick="sortTable('status')">Status <span id="sort-status-icon" class="sort-icon"></span></th>
+            <th onclick="sortTable('inspector')">Inspektor <span id="sort-inspector-icon" class="sort-icon"></span></th>
+            <th onclick="sortTable('date')">Data <span id="sort-date-icon" class="sort-icon"></span></th>
+            <th id="noteHeader" onclick="sortTable('note')">Adnotacja <span id="sort-note-icon" class="sort-icon"></span></th>
+            <th style="width: 40px;">Akcja</th>
+          </tr>
+        </thead>
+        <tbody id="list"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const barcodeInput = document.getElementById("barcode");
+    const noteInput = document.getElementById("note");
+    const inspectorInput = document.getElementById("inspector");
+    const reworkNameInput = document.getElementById("rework-name");
+    const message = document.getElementById("message");
+    const list = document.getElementById("list");
+    const buttons = document.getElementById("buttons");
+    const fileNameDisplay = document.getElementById("file-name");
+    const confirmationDialog = document.getElementById("confirmationDialog");
+    const confirmationTitle = document.getElementById("confirmationTitle");
+    const confirmationMessage = document.getElementById("confirmationMessage");
+    const fileInputContainer = document.getElementById("fileInputContainer");
+    const reworkModeBtn = document.getElementById("reworkModeBtn");
+    const scanModeBtn = document.getElementById("scanModeBtn");
+    const mainContent = document.getElementById("mainContent");
+    const toScanContainer = document.getElementById("toScanContainer");
+    const okContainer = document.getElementById("okContainer");
+    const ngContainer = document.getElementById("ngContainer");
+    const ngPercentContainer = document.getElementById("ngPercentContainer");
+    const statusHeader = document.getElementById("statusHeader");
+    const noteHeader = document.getElementById("noteHeader");
+
+    let reworkData = [];
+    let scanData = [];
+    let currentSort = { field: 'code', direction: 'asc' };
+    let codeToRemove = null;
+    let currentMode = 'rework';
+    let tempCode = '';
+    let isProcessing = false;
+
+    function switchMode(mode) {
+      currentMode = mode;
+      reworkModeBtn.classList.toggle('active', mode === 'rework');
+      scanModeBtn.classList.toggle('active', mode === 'scan');
+      fileInputContainer.style.display = mode === 'rework' ? 'block' : 'none';
+      buttons.style.display = 'none';
+      noteInput.style.display = 'none';
+      
+      if (mode === 'rework') {
+        mainContent.classList.remove('scan-mode');
+        toScanContainer.style.display = 'block';
+        okContainer.style.display = 'block';
+        ngContainer.style.display = 'block';
+        ngPercentContainer.style.display = 'block';
+        statusHeader.style.display = '';
+        noteHeader.style.display = '';
+        reworkNameInput.placeholder = "Nazwa reworku*";
+      } else {
+        mainContent.classList.add('scan-mode');
+        toScanContainer.style.display = 'none';
+        okContainer.style.display = 'none';
+        ngContainer.style.display = 'none';
+        ngPercentContainer.style.display = 'none';
+        statusHeader.style.display = 'none';
+        noteHeader.style.display = 'none';
+        reworkNameInput.placeholder = "Nazwa scanu*";
+      }
+      
+      renderTable();
+      updateStats();
+      validateForm();
+    }
+
+    function validateForm() {
+      const isNameValid = reworkNameInput.value.trim().length > 0;
+      const isInspectorValid = inspectorInput.value.trim().length >= 3;
+
+      reworkNameInput.classList.toggle('required-field', !isNameValid);
+      inspectorInput.classList.toggle('required-field', !isInspectorValid);
+
+      if (isNameValid && isInspectorValid) {
+        barcodeInput.disabled = false;
+        barcodeInput.classList.remove('disabled-input');
+        return true;
+      } else {
+        barcodeInput.disabled = true;
+        barcodeInput.classList.add('disabled-input');
+        return false;
+      }
+    }
+
+    function handleReworkNameKeyDown(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const name = reworkNameInput.value.trim();
+        if (name.length > 0) {
+          localStorage.setItem(currentMode === 'rework' ? 'reworkName' : 'scanName', name);
+          inspectorInput.focus();
+          validateForm();
+        }
+      }
+    }
+
+    function handleInspectorKeyDown(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const value = inspectorInput.value.trim();
+        if (value.length >= 3) {
+          localStorage.setItem('inspector', value);
+          if (validateForm()) barcodeInput.focus();
+        }
+      }
+    }
+
+    window.onload = function() {
+      reworkNameInput.value = localStorage.getItem('reworkName') || '';
+      inspectorInput.value = localStorage.getItem('inspector') || '';
+      
+      const savedReworkData = localStorage.getItem("reworkData");
+      if (savedReworkData) {
+        try {
+          reworkData = JSON.parse(savedReworkData);
+        } catch (e) {
+          console.error("Błąd ładowania danych rework", e);
+        }
+      }
+
+      const savedScanData = localStorage.getItem("scanData");
+      if (savedScanData) {
+        try {
+          scanData = JSON.parse(savedScanData);
+        } catch (e) {
+          console.error("Błąd ładowania danych scan", e);
+        }
+      }
+
+      updateSortIcons();
+      validateForm();
+      switchMode('rework');
+      
+      inspectorInput.addEventListener("input", function() {
+        localStorage.setItem('inspector', inspectorInput.value.trim());
+        validateForm();
+      });
+      
+      barcodeInput.addEventListener("keydown", handleBarcodeInput);
+      
+      reworkNameInput.addEventListener("input", function() {
+        localStorage.setItem(currentMode === 'rework' ? 'reworkName' : 'scanName', reworkNameInput.value.trim());
+        validateForm();
+      });
+    }
+
+    function handleFileImport(event) {
+      if (!validateForm()) {
+        showMessage("Wprowadź nazwę i inspektora przed importem", "error", 3000);
+        event.target.value = '';
+        return;
+      }
+
+      const file = event.target.files[0];
+      if (!file) {
+        showMessage("Nie wybrano pliku", "error", 3000);
+        return;
+      }
+
+      fileNameDisplay.textContent = file.name;
+
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          if (workbook.SheetNames.length === 0) {
+            throw new Error("Brak arkuszy w pliku");
+          }
+
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          if (!worksheet || !worksheet['!ref']) {
+            throw new Error("Arkusz jest pusty");
+          }
+
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+          processImportedData(jsonData);
+        } catch (error) {
+          console.error(error);
+          showMessage(`Błąd: ${error.message}`, "error", 5000);
+        }
+      };
+      
+      reader.onerror = function(error) {
+        showMessage("Błąd odczytu pliku. Spróbuj ponownie.", "error", 3000);
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+
+    function processImportedData(rawData) {
+      const newCodes = [];
+      let codesFound = 0;
+      let skippedRows = 0;
+
+      // Przetwarzaj wszystkie wiersze (wcześniej zaczynał od 1, pomijając pierwszy wiersz)
+      for (let i = 0; i < rawData.length; i++) {
+        const row = rawData[i];
+        if (!row || row.length === 0) continue;
+
+        const code = String(row[0] || '').trim().toUpperCase();
+        
+        if (code.length >= 14) {
+          const currentData = currentMode === 'rework' ? reworkData : scanData;
+          const exists = currentData.some(item => 
+            currentMode === 'rework' 
+              ? item.code.substring(0, 14) === code.substring(0, 14) 
+              : item.code === code
+          );
+          
+          if (!exists) {
+            newCodes.push({
+              code: code,
+              status: "Nie zeskanowano",
+              inspector: "",
+              note: "",
+              timestamp: null,
+              isNew: false
+            });
+            codesFound++;
+          }
+        } else {
+          skippedRows++;
+        }
+      }
+
+      if (codesFound === 0) {
+        throw new Error("Nie znaleziono poprawnych kodów w pliku (wymagane min. 14 znaków)");
+      }
+
+      if (currentMode === 'rework') {
+        reworkData = [...reworkData, ...newCodes];
+        localStorage.setItem("reworkData", JSON.stringify(reworkData));
+      } else {
+        scanData = [...scanData, ...newCodes];
+        localStorage.setItem("scanData", JSON.stringify(scanData));
+      }
+
+      showMessage(`Zaimportowano ${codesFound} kodów (pominięto ${skippedRows} wierszy)`, "success", 3000);
+      renderTable();
+      updateStats();
+    }
+
+    function handleBarcodeInput(e) {
+      if (isProcessing) {
+        e.preventDefault();
+        return;
+      }
+
+      if (!validateForm()) {
+        e.preventDefault();
+        showMessage("Wprowadź nazwę i inspektora przed skanowaniem", "error", 3000);
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const scannedCode = barcodeInput.value.trim();
+        
+        if (scannedCode.length < 14) {
+          showMessage("Kod musi mieć co najmniej 14 znaków", "error", 3000);
+          setTimeout(() => { barcodeInput.value = ""; }, 4000);
+          return;
+        }
+
+        isProcessing = true;
+
+        if (currentMode === 'rework') {
+          // W trybie Rework porównujemy tylko pierwsze 14 znaków
+          const scannedCodePrefix = scannedCode.substring(0, 14);
+          const currentData = reworkData;
+          const matchedItem = currentData.find(item => item.code.substring(0, 14) === scannedCodePrefix);
+          
+          if (!matchedItem) {
+            showMessage("KOD NIE ZNAJDUJE SIĘ NA LIŚCIE!", "error", 3000);
+            setTimeout(() => { 
+              barcodeInput.value = "";
+              isProcessing = false;
+            }, 4000);
+            return;
+          }
+
+          if (matchedItem.status !== "Nie zeskanowano") {
+            showMessage("TEN KOD ZOSTAŁ JUŻ ZESKANOWANY!", "warning", 3000);
+            setTimeout(() => { 
+              barcodeInput.value = "";
+              isProcessing = false;
+            }, 4000);
+            return;
+          }
+
+          // Zawsze używamy dokładnego kodu z listy
+          tempCode = matchedItem.code;
+          barcodeInput.value = matchedItem.code;
+          buttons.style.display = "flex";
+          showMessage("Wybierz status: OK lub NG", "info", 0);
+          
+          setTimeout(() => { 
+            barcodeInput.value = "";
+            isProcessing = false;
+          }, 4000);
+        } else {
+          // Tryb Scan - wymagamy pełnego dopasowania
+          const currentData = scanData;
+          const exists = currentData.some(item => item.code === scannedCode);
+          if (exists) {
+            showMessage("TEN KOD ZOSTAŁ JUŻ ZESKANOWANY!", "warning", 3000);
+            barcodeInput.value = "";
+            isProcessing = false;
+            return;
+          }
+          
+          saveEntryScanMode(scannedCode);
+          isProcessing = false;
+          return;
+        }
+      }
+    }
+
+    function selectStatus(status) {
+      buttons.style.display = "none";
+      
+      if (status === "NG") {
+        noteInput.style.display = "block";
+        noteInput.disabled = false;
+        noteInput.focus();
+        showMessage("Wpisz adnotację i naciśnij Enter", "info", 0);
+        noteInput.addEventListener("keydown", function handleNoteInput(e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            saveEntry(status, noteInput.value.trim());
+            noteInput.removeEventListener("keydown", handleNoteInput);
+          }
+        });
+      } else {
+        saveEntry(status, "");
+      }
+    }
+
+    function saveEntryScanMode(code) {
+      const newEntry = {
+        code: code,
+        status: "OK",
+        inspector: inspectorInput.value.trim(),
+        note: "",
+        timestamp: Date.now(),
+        isNew: true
+      };
+      
+      scanData.push(newEntry);
+      localStorage.setItem("scanData", JSON.stringify(scanData));
+      
+      showMessage("Kod został pomyślnie zeskanowany!", "success", 2000);
+      renderTable();
+      updateStats();
+      barcodeInput.value = "";
+      barcodeInput.focus();
+    }
+
+    function saveEntry(status, note) {
+      const currentData = currentMode === 'rework' ? reworkData : scanData;
+      const codeIndex = currentData.findIndex(item => 
+        currentMode === 'rework' 
+          ? item.code.substring(0, 14) === tempCode.substring(0, 14) 
+          : item.code === tempCode
+      );
+      
+      if (codeIndex !== -1) {
+        currentData[codeIndex] = {
+          ...currentData[codeIndex],
+          status: status,
+          inspector: inspectorInput.value.trim(),
+          note: note,
+          timestamp: Date.now(),
+          isNew: true
+        };
+      }
+      
+      if (currentMode === 'rework') {
+        localStorage.setItem("reworkData", JSON.stringify(reworkData));
+      } else {
+        localStorage.setItem("scanData", JSON.stringify(scanData));
+      }
+      
+      noteInput.value = "";
+      noteInput.style.display = "none";
+      noteInput.disabled = true;
+      
+      showMessage(`Kod oznaczony jako ${status}`, "success", 2000);
+      renderTable();
+      updateStats();
+      barcodeInput.focus();
+    }
+
+    function showRemoveConfirmation(code) {
+      codeToRemove = code;
+      
+      if (currentMode === 'rework') {
+        confirmationTitle.textContent = "Czy na pewno chcesz zresetować status?";
+        confirmationMessage.textContent = "Status kodu zostanie zresetowany do 'Nie zeskanowano'.";
+      } else {
+        confirmationTitle.textContent = "Czy na pewno chcesz usunąć ten kod?";
+        confirmationMessage.textContent = "Kod zostanie trwale usunięty z listy.";
+      }
+      
+      confirmationDialog.style.display = 'flex';
+    }
+
+    function cancelRemoval() {
+      confirmationDialog.style.display = 'none';
+      codeToRemove = null;
+    }
+
+    function confirmRemoval() {
+      if (!codeToRemove) return;
+      
+      if (currentMode === 'rework') {
+        const codeIndex = reworkData.findIndex(item => item.code.substring(0, 14) === codeToRemove.substring(0, 14));
+        if (codeIndex !== -1) {
+          reworkData[codeIndex] = {
+            ...reworkData[codeIndex],
+            status: "Nie zeskanowano",
+            inspector: "",
+            note: "",
+            timestamp: null,
+            isNew: false
+          };
+          
+          localStorage.setItem("reworkData", JSON.stringify(reworkData));
+          showMessage(`Zresetowano status kodu: ${reworkData[codeIndex].code.substring(0, 14)}...`, "success", 2000);
+        }
+      } else {
+        const codeIndex = scanData.findIndex(item => item.code === codeToRemove);
+        if (codeIndex !== -1) {
+          scanData.splice(codeIndex, 1);
+          localStorage.setItem("scanData", JSON.stringify(scanData));
+          showMessage(`Usunięto kod: ${codeToRemove}`, "success", 2000);
+        }
+      }
+      
+      confirmationDialog.style.display = 'none';
+      renderTable();
+      updateStats();
+      codeToRemove = null;
+    }
+
+    function renderTable() {
+      const currentData = currentMode === 'rework' ? reworkData : scanData;
+      const sortedData = [...currentData].sort((a, b) => {
+        if (currentMode === 'rework') {
+          if (a.status === "Nie zeskanowano" && b.status !== "Nie zeskanowano") return 1;
+          if (a.status !== "Nie zeskanowano" && b.status === "Nie zeskanowano") return -1;
+        }
+        
+        const aValue = a[currentSort.field] || "";
+        const bValue = b[currentSort.field] || "";
+        
+        if (currentSort.direction === 'asc') {
+          return aValue > bValue ? 1 : -1;
+        } else {
+          return aValue < bValue ? 1 : -1;
+        }
+      });
+
+      const displayData = currentMode === 'scan' 
+        ? sortedData.filter(item => item.status !== "Nie zeskanowano")
+        : sortedData;
+
+      list.innerHTML = displayData.map(entry => `
+        <tr class="${entry.isNew ? 'new-entry' : ''}">
+          <td>${entry.code}</td>
+          ${currentMode === 'rework' ? `
+            <td class="${getStatusClass(entry.status)}">${entry.status}</td>
+          ` : ''}
+          <td>${entry.inspector}</td>
+          <td>${entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ""}</td>
+          ${currentMode === 'rework' ? `
+            <td>${entry.note}</td>
+          ` : ''}
+          <td class="remove-btn" onclick="showRemoveConfirmation('${entry.code}')">${currentMode === 'rework' ? '↻' : '✕'}</td>
+        </tr>
+      `).join('');
+
+      if (currentMode === 'rework') {
+        reworkData.forEach(entry => entry.isNew = false);
+      } else {
+        scanData.forEach(entry => entry.isNew = false);
+      }
+    }
+
+    function getStatusClass(status) {
+      switch(status) {
+        case "OK": return "status-ok";
+        case "NG": return "status-ng";
+        default: return "status-pending";
+      }
+    }
+
+    function sortTable(field) {
+      if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
+      updateSortIcons();
+      renderTable();
+    }
+
+    function updateSortIcons() {
+      document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.textContent = '';
+      });
+      
+      const iconId = `sort-${currentSort.field}-icon`;
+      const icon = document.getElementById(iconId);
+      if (icon) {
+        icon.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+      }
+    }
+
+    function updateStats() {
+      let total, scanned, toScan, ok, ng;
+      const currentData = currentMode === 'rework' ? reworkData : scanData;
+      
+      if (currentMode === 'rework') {
+        total = currentData.length;
+        scanned = currentData.filter(entry => entry.status !== "Nie zeskanowano").length;
+        toScan = total - scanned;
+        ok = currentData.filter(entry => entry.status === "OK").length;
+        ng = currentData.filter(entry => entry.status === "NG").length;
+        const percent = scanned > 0 ? Math.round((ng / scanned) * 100) : 0;
+
+        document.getElementById("scannedCount").textContent = scanned;
+        document.getElementById("toScanCount").textContent = toScan;
+        document.getElementById("okCount").textContent = ok;
+        document.getElementById("ngCount").textContent = ng;
+        document.getElementById("ngPercent").textContent = `${percent}%`;
+      } else {
+        scanned = currentData.filter(entry => entry.status !== "Nie zeskanowano").length;
+        document.getElementById("scannedCount").textContent = scanned;
+      }
+    }
+
+    function exportToExcel() {
+      const currentData = currentMode === 'rework' ? reworkData : scanData;
+      
+      if (currentData.length === 0) {
+        showMessage("Brak danych do eksportu", "error", 3000);
+        return;
+      }
+
+      const name = reworkNameInput.value.trim() || (currentMode === 'rework' ? 'rework' : 'scan');
+      const inspector = inspectorInput.value.trim() || 'nieznany';
+      
+      // Format daty dla nazwy pliku: YYYY-MM-DD
+      const dateStr = new Date().toISOString().slice(0, 10);
+      
+      // Nowy format nazwy pliku: [nazwa]_[inspektor]_[data].xlsx
+      const fileName = `${name}_${inspector}_${dateStr}.xlsx`;
+      const wb = XLSX.utils.book_new();
+      
+      if (currentMode === 'rework') {
+        // Eksport w trybie Rework - pełne dane
+        const headerData = [
+          [`Nazwa: ${name || 'Brak danych'}`],
+          [`Inspektor: ${inspector || 'Brak danych'}`],
+          [`Data eksportu: ${new Date().toLocaleString()}`],
+          [`Tryb: Rework`],
+          [],
+          ["Kod", "Status", "Inspektor", "Adnotacja", "Data"]
+        ];
+
+        const exportData = currentData;
+
+        const wsData = [
+          ...headerData,
+          ...exportData.map(entry => [
+            entry.code,
+            entry.status,
+            entry.inspector,
+            entry.note,
+            entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ""
+          ])
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } });
+        ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 4 } });
+        ws['!merges'].push({ s: { r: 2, c: 0 }, e: { r: 2, c: 4 } });
+        ws['!merges'].push({ s: { r: 3, c: 0 }, e: { r: 3, c: 4 } });
+        ws['!merges'].push({ s: { r: 4, c: 0 }, e: { r: 4, c: 4 } });
+
+        XLSX.utils.book_append_sheet(wb, ws, "Skanowanie");
+      } else {
+        // Eksport w trybie Scan - tylko kody w pierwszej kolumnie
+        const exportData = currentData
+          .filter(item => item.status !== "Nie zeskanowano")
+          .map(item => [item.code]);
+
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        XLSX.utils.book_append_sheet(wb, ws, "Skanowanie");
+      }
+
+      XLSX.writeFile(wb, fileName);
+    }
+
+    function resetAll() {
+      if (confirm("Czy na pewno chcesz wyczyścić wszystkie dane w bieżącym trybie?")) {
+        if (currentMode === 'rework') {
+          reworkData = [];
+          localStorage.setItem("reworkData", JSON.stringify(reworkData));
+        } else {
+          scanData = [];
+          localStorage.setItem("scanData", JSON.stringify(scanData));
+        }
+        
+        renderTable();
+        updateStats();
+        showMessage("Wyczyszczono wszystkie dane", "success", 3000);
+      }
+    }
+
+    function showMessage(msg, type = "info", duration = 3000) {
+      // Usuń wszystkie klasy wcześniej
+      message.className = "message";
+      // Dodaj odpowiednią klasę w zależności od typu
+      message.classList.add(type);
+      message.textContent = msg;
+      if (duration > 0) {
+        setTimeout(() => {
+          message.textContent = "";
+          message.className = "message";
+        }, duration);
+      }
+    }
+  </script>
+</body>
+</html>
